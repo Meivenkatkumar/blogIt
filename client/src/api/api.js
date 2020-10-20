@@ -15,7 +15,16 @@ var postRequest = async (route, body) => {
    }
 }
 
+var getRequest = async (route) => {
+    try {
+        var response = await axios.get(config.apiURL + route);
+        return response.data;
+    } catch (error) {
+        return {success: false, msg: "api Get request Failed", err: error, route: config.apiURL + route};
+    }
+}
 
 export const apiService = {
-    postRequest
+    postRequest,
+    getRequest
 }

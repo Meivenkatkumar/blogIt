@@ -3,7 +3,7 @@ import $ from "jquery";
 import {apiService} from "../../api/api";
 
 export default class Signup extends React.Component {
-  
+
   submitForm = async () => {
     var body = {
       username: $("#username").val(),
@@ -21,14 +21,20 @@ export default class Signup extends React.Component {
         if(!response.success){
           throw response.msg;
         }
-        window.location.href = "/";
+        await this.props.verifyLogin();
       }
       catch(err){
-        console.log("handle error:",err);
+        console.log("handle error:", err);
       }
     }
   }
   
+  componentDidUpdate = async () => {
+    if(this.props.logIn){
+      window.location.href = "/";
+    }
+  } 
+
   render() {
     return (
       <div>

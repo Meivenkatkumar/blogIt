@@ -11,7 +11,7 @@ router.get("/status", (req, res) => {
 // Auth Routes
 router.post("/auth/signup", authenticate.signup);
 router.post("/auth/login", authenticate.login);
-router.post("/auth/verify", authenticate.validateToken);
+router.get("/auth/verify", authenticate.validateToken);
 
 
 

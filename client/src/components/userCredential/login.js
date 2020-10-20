@@ -14,14 +14,20 @@ export default class Login extends React.Component {
       if(!response.success){
         throw response.msg;
       }
-      window.location.href = "/";
+      await this.props.verifyLogin();
     }
     catch(err){
       console.log("handle error:",err);
     }
   }
 
-  render() {
+  componentDidUpdate = async () => {
+    if(this.props.logIn){
+      window.location.href = "/";
+    }
+  }
+
+render() {
     return (
       <div>
         <h3>Log in to your Account</h3>

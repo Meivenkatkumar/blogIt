@@ -24,13 +24,28 @@ var signup = async (req, res, next)=>{
                 username: username
             });
             if(!userObj){
-                await User.create({
+                userObj = await User.create({
                     username: username,
                     password: bcrypt.hashSync(password),
                     auth: "native",
                     email: email
                 }); 
-                return res.status(200).json({success: true, msg:"User registered successfully!"});
+
+                var user = {
+                    userID: userObj._id,
+                    username: userObj.username,
+                    auth: "native"
+                };
+                var token = getJWTToken(user);
+
+                return res.cookie('token', token, {
+                    maxAge: 24 * 60 * 60 * 1000, 
+                    httpOnly: true,
+                    secure: false,
+                    sameSite: true,
+                })
+                .status(200)
+                .json({success: true, msg:"User registered successfully!"});
             }
             else{
                 return res.status(200).json({success: false, msg: "Username already exists!"});
@@ -64,7 +79,7 @@ var login = async (req, res, next)=>{
                     };
                     var token = getJWTToken(user);
                     
-                    res.cookie('token', token, {
+                    return res.cookie('token', token, {
                         maxAge: 24 * 60 * 60 * 1000, 
                         httpOnly: true,
                         secure: false,
@@ -74,22 +89,21 @@ var login = async (req, res, next)=>{
                     .json({success: true, msg:"Login Successful!", username: userObj.username});   
                 
                 } else {
-                    res.status(200).json({success: false, msg: "Incorrect Credentials!"})
+                    return res.status(200).json({success: false, msg: "Incorrect Credentials!"})
                 }    
             }
             else{
-                res.status(200).json({success: false, msg: "Incorrect Credentials!"})
+                return res.status(200).json({success: false, msg: "Incorrect Credentials!"})
             }
         }catch(e){
-            res.status(200).json({success: false, msg: e})
+            return res.status(200).json({success: false, msg: e})
         }
     }
 };
 
 
 var validateToken = async (req, res)=>{
-    const authorizationHeader = req.headers.authorization || (req.cookies && req.cookies.authtoken && `Bearer ${req.cookies.authtoken}`);
-    
+    const authorizationHeader = req.headers.authorization || (req.cookies && req.cookies.token && `Bearer ${req.cookies.token}`);
     let result;
     if (authorizationHeader) {
       const token = authorizationHeader.split(' ')[1]; // Bearer <token>
@@ -100,10 +114,9 @@ var validateToken = async (req, res)=>{
       const JWT_SECRET= config.JWT_SECRET
       try {
         result = jwt.verify(token, JWT_SECRET, options);
-        req.user = result.user;
-        return res.status(200).json({success: true, msg: "Authentication Successful!"});
+        return res.status(200).json({success: true, msg: "Authentication Successful!", user: result.user});
       } catch (err) {
-          return res.status(200).json({success: false, msg: "Invalid Token, Verification failed."});
+        return res.status(200).json({success: false, msg: "Invalid Token, Verification failed."});
       }
     } else {
         return res.status(200).json({success: false, msg: "Authentication Token Required."});
